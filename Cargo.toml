@@ -1,0 +1,17 @@
+[package]
+name = "c10time"
+description = "a decimalized time library and commandline clock application"
+authors = ["Walter B. Vaughan <wbv@users.noreply.github.com>"]
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "c10"
+path = "src/lib.rs"
+
+[[bin]]
+name = "c10clock"
+path = "src/c10clock.rs"
+
+[dependencies]
+libc = "0.2.139"
