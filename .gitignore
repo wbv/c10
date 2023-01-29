@@ -1,1 +1,5 @@
+# rust build products
 /target
+
+# vim swapfiles
+*.swp
