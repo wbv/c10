@@ -25,7 +25,7 @@ pub const fn year_to_seconds(year: usize) -> usize {
     EPOCH_SECONDS[index]
 }
 
-/// C10 ticks after the Unix epoch for a given year.
+/// Ticks after the Unix epoch for a given year.
 pub const fn year_to_ticks(year: usize) -> u64 {
     year_to_seconds(year) as u64 * 1_000_000 / 86_400
 }
@@ -42,7 +42,7 @@ pub fn year_from_secs(secs: usize) -> usize {
     while (EPOCH_SECONDS[index + 1] as usize) < secs {
         index += 1;
         if index >= EPOCH_SECONDS.len() {
-            panic!("W: index above bounds!");
+            panic!("year_from_secs index out-of-bounds");
         }
     }
     index + 1970
