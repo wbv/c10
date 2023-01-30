@@ -9,7 +9,7 @@
 #[cfg(test)]
 mod tests;
 
-mod epochs;
+pub mod epochs;
 
 extern crate libc;
 use libc::{CLOCK_REALTIME, timespec, clock_gettime};
