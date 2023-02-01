@@ -21,4 +21,3 @@ fn now() {
     let now = SystemTime::now();
     assert_ne!(now, SystemTime { ticks: 0 });
 }
-

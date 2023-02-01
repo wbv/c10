@@ -9,6 +9,8 @@
 #[cfg(test)]
 mod tests;
 
+use std::fmt;
+
 pub mod epochs;
 
 extern crate libc;
@@ -69,8 +71,8 @@ impl Duration {
     }
 }
 
-impl std::fmt::Display for Duration {
-    fn fmt(&self, fmter: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for Duration {
+    fn fmt(&self, fmter: &mut fmt::Formatter) -> fmt::Result {
         let (ints, cents, ticks) = self.time_components();
         write!(fmter, "{ints:02}:{cents:02}:{ticks:02}")
     }
@@ -118,7 +120,7 @@ impl SystemTime {
         };
 
         SystemTime {
-            ticks: ((secs * 100 * 100) + ((nsecs * 86_400) / 1_000_000)) as u64,
+            ticks: ((secs * 86_400 / 1_000_000) + ((nsecs * 86_400) / (1_000_000 * 1_000_000_000) )) as u64,
         }
     }
 
@@ -131,15 +133,19 @@ impl SystemTime {
     }
 
     /// Returns the year, decaday, and day components of the timestamp's date.
+    /// TODO: pls fix this
     pub fn date_components(&self) -> (u64, u64, u64) {
-        let _ = epochs::year_to_ticks(1977);
-        unimplemented!();
+        let year: u64 = epochs::year_from_ticks(self.ticks).try_into().unwrap();
+        let dayinyear = (self.ticks - epochs::year_to_ticks(year as usize)) / 1_000_000;
+        let decaday   = dayinyear / 10;
+        let day       = dayinyear % 10;
+        (year, decaday, day)
     }
 }
 
 
-impl std::fmt::Display for SystemTime {
-    fn fmt(&self, fmter: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for SystemTime {
+    fn fmt(&self, fmter: &mut fmt::Formatter) -> fmt::Result {
         let (ints, cents, ticks) = self.time_components();
         write!(fmter, "Day {ints:02}:{cents:02}:{ticks:02}")
     }
