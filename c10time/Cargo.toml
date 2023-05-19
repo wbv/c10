@@ -1,0 +1,13 @@
+[package]
+name = "c10time"
+description = "a decimalized time library"
+edition = "2021"
+authors.workspace = true
+version.workspace = true
+
+[lib]
+name = "c10"
+path = "src/lib.rs"
+
+[dependencies]
+libc = "0.2.139"

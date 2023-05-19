@@ -1,0 +1,10 @@
+[package]
+name = "c10clock"
+description = "a decimalized CLI clock"
+edition = "2021"
+authors.workspace = true
+version.workspace = true
+
+[dependencies]
+c10time = { path = "../c10time", version = "0.0.1" }
+crossterm = { version = "0.26.1", default-features = false }
