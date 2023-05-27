@@ -119,8 +119,13 @@ impl SystemTime {
             }
         };
 
+        // compute the number of ticks this way
+        // 1 tick = 0.0864 seconds ==> 625 ticks = 54 seconds
+        let sec_ticks = secs * 625 / 54;
+        let nsec_ticks = nsecs * 625 / 54_000_000_000;
+
         SystemTime {
-            ticks: ((secs * 86_400 / 1_000_000) + ((nsecs * 86_400) / (1_000_000 * 1_000_000_000) )) as u64,
+            ticks: (sec_ticks + nsec_ticks) as u64,
         }
     }
 
@@ -133,12 +138,11 @@ impl SystemTime {
     }
 
     /// Returns the year, decaday, and day components of the timestamp's date.
-    /// TODO: pls fix this
     pub fn date_components(&self) -> (u64, u64, u64) {
         let year: u64 = epochs::year_from_ticks(self.ticks).try_into().unwrap();
         let dayinyear = (self.ticks - epochs::year_to_ticks(year as usize)) / 1_000_000;
-        let decaday   = dayinyear / 10;
-        let day       = dayinyear % 10;
+        let decaday   = (dayinyear / 10) + 1;
+        let day       = (dayinyear % 10) + 1;
         (year, decaday, day)
     }
 }
@@ -147,7 +151,9 @@ impl SystemTime {
 impl fmt::Display for SystemTime {
     fn fmt(&self, fmter: &mut fmt::Formatter) -> fmt::Result {
         let (ints, cents, ticks) = self.time_components();
-        write!(fmter, "Day {ints:02}:{cents:02}:{ticks:02}")
+        let (year, decaday, day) = self.date_components();
+        write!(fmter, "{year:4} {decaday:2}.{day:02} ")?;
+        write!(fmter, "{ints:02}:{cents:02}:{ticks:02}")
     }
 }
 

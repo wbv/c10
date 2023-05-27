@@ -1,10 +1,16 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+//! A C10 "decimalized" clock for your terminal.
+
+#![deny(warnings)]
+
 use std::io::Write;
 use std::thread::sleep;
 use std::time::Duration;
 
 use crossterm::{ExecutableCommand, terminal, cursor, Result};
 
-const UPDATE_RATE_HZ: u64 = 30;
+const UPDATE_RATE_HZ: u64 = 60;
 const UPDATE_PERIOD: Duration = Duration::from_micros(1_000_000/UPDATE_RATE_HZ);
 
 struct UI {
@@ -22,19 +28,20 @@ impl UI {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        for i in 1..=100 {
+        loop {
             // clear the screen
             self.stdout.execute(terminal::Clear(terminal::ClearType::All))?;
             self.stdout.execute(cursor::MoveTo(0,0))?;
 
+            let now = c10::SystemTime::now();
+
             // write to the screen
-            write!(self.stdout, "{i:>8}\n")?;
+            write!(self.stdout, "{now}\n")?;
+            self.stdout.flush()?;
 
             // wait until next update
             sleep(UPDATE_PERIOD);
         }
-
-        return Ok(());
     }
 }
 
