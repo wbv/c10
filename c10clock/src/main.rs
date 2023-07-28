@@ -6,15 +6,17 @@
 
 use std::io::Write;
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crossterm::{ExecutableCommand, terminal, cursor, Result};
 
-const UPDATE_RATE_HZ: u64 = 60;
-const UPDATE_PERIOD: Duration = Duration::from_micros(1_000_000/UPDATE_RATE_HZ);
-
 struct UI {
     stdout: std::io::Stdout,
+
+    // timing variables for screen update
+    clk_time: Instant,
+    drifts_ns: [i64; 4],
+    drifts_idx: usize,
 }
 
 impl UI {
@@ -23,7 +25,10 @@ impl UI {
         stdout.execute(cursor::Hide).unwrap();
 
         Self {
-            stdout
+            stdout,
+            clk_time: Instant::now(),
+            drifts_ns: Default::default(),
+            drifts_idx: Default::default(),
         }
     }
 
@@ -33,15 +38,39 @@ impl UI {
             self.stdout.execute(terminal::Clear(terminal::ClearType::All))?;
             self.stdout.execute(cursor::MoveTo(0,0))?;
 
-            let now = c10::SystemTime::now();
+            let c10now = c10::SystemTime::now();
 
             // write to the screen
-            write!(self.stdout, "{now}\n")?;
+            write!(self.stdout, "{c10now}\n")?;
             self.stdout.flush()?;
 
-            // wait until next update
-            sleep(UPDATE_PERIOD);
+            // sleep until the next time should be printed
+            self.sleep();
         }
+    }
+
+    fn sleep(&mut self) {
+        const GOAL: Duration = Duration::from_micros(24*60*60);
+
+        // "how long since the last loop iteration"
+        let elapsed = self.clk_time.elapsed();
+        self.clk_time += elapsed;
+
+        // compute the average error from the "goal" sleep duration as measured by elapsed time
+        let drift = (elapsed.as_nanos() as i64) - (GOAL.as_nanos() as i64);
+
+        // store drifts in a rolling circular buffer
+        self.drifts_ns[self.drifts_idx] = drift;
+        self.drifts_idx = (self.drifts_idx + 1) % self.drifts_ns.len();
+
+        let avg_drift: i64 = self.drifts_ns.iter().sum::<i64>() / self.drifts_ns.len() as i64;
+        eprintln!("avg_drift {:?}", avg_drift);
+
+        // sleep for the adjusted amount of time accounting for average drift
+        let computed_sleep = (GOAL.as_nanos() as i64) - avg_drift;
+        eprintln!("sleeping for: {:?}", computed_sleep);
+
+        sleep(Duration::from_nanos(computed_sleep.try_into().unwrap()));
     }
 }
 
