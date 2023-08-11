@@ -14,13 +14,13 @@ use std::fmt;
 pub mod epochs;
 
 extern crate libc;
-use libc::{CLOCK_REALTIME, timespec, clock_gettime};
+use libc::{clock_gettime, timespec, CLOCK_REALTIME};
 
-pub const TICK:     Duration = Duration::new(     0, 0, 1);
-pub const CENTIVAL: Duration = Duration::new(     0, 1, 0);
-pub const INTERVAL: Duration = Duration::new(     1, 0, 0);
-pub const DAY:      Duration = Duration::new(   100, 0, 0);
-pub const DECADAY:  Duration = Duration::new(10*100, 0, 0);
+pub const TICK: Duration = Duration::new(0, 0, 1);
+pub const CENTIVAL: Duration = Duration::new(0, 1, 0);
+pub const INTERVAL: Duration = Duration::new(1, 0, 0);
+pub const DAY: Duration = Duration::new(100, 0, 0);
+pub const DECADAY: Duration = Duration::new(10 * 100, 0, 0);
 
 /// Representation for a unit of duration in C10 time.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -38,7 +38,7 @@ impl Duration {
     /// _Note: this would correspond to a duration of ~50 billion years_
     pub const fn new(intervals: u64, centivals: u64, ticks: u64) -> Duration {
         // safely add intervals to ticks first
-        let iticks = match intervals.checked_mul((100*100) as u64) {
+        let iticks = match intervals.checked_mul((100 * 100) as u64) {
             Some(iticks) => iticks,
             None => panic!("intervals overflow in Duration::new"),
         };
@@ -48,7 +48,7 @@ impl Duration {
         };
 
         // then safely add centivals to ticks
-        let cticks = match centivals.checked_mul(100 as u64) {
+        let cticks = match centivals.checked_mul(100_u64) {
             Some(cticks) => cticks,
             None => panic!("centivals overflow in Duration::new"),
         };
@@ -57,16 +57,14 @@ impl Duration {
             None => panic!("centivals+ticks overflow in Duration::new"),
         };
 
-        Duration {
-            ticks
-        }
+        Duration { ticks }
     }
 
     /// Extracts the interval, centival, and tick components.
     pub fn time_components(&self) -> (u64, u64, u64) {
         let ticks = self.ticks % 100;
         let cents = (self.ticks / 100) % 100;
-        let ints =  (self.ticks / (100*100)) % 100;
+        let ints = (self.ticks / (100 * 100)) % 100;
         (ints, cents, ticks)
     }
 }
@@ -90,7 +88,6 @@ impl TryFrom<std::time::Duration> for Duration {
     }
 }
 
-
 /// A date and time of a local system in the decimalized C10 calendar and clock.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SystemTime {
@@ -98,7 +95,6 @@ pub struct SystemTime {
 }
 
 impl SystemTime {
-
     /// Gets the current system time as a SystemTime.
     ///
     /// # Panics
@@ -133,7 +129,7 @@ impl SystemTime {
     pub fn time_components(&self) -> (u64, u64, u64) {
         let ticks = self.ticks % 100;
         let cents = (self.ticks / 100) % 100;
-        let ints  = (self.ticks / (100 * 100)) % 100;
+        let ints = (self.ticks / (100 * 100)) % 100;
         (ints, cents, ticks)
     }
 
@@ -141,12 +137,11 @@ impl SystemTime {
     pub fn date_components(&self) -> (u64, u64, u64) {
         let year: u64 = epochs::year_from_ticks(self.ticks).try_into().unwrap();
         let dayinyear = (self.ticks - epochs::year_to_ticks(year as usize)) / 1_000_000;
-        let decaday   = (dayinyear / 10) + 1;
-        let day       = (dayinyear % 10) + 1;
+        let decaday = (dayinyear / 10) + 1;
+        let day = (dayinyear % 10) + 1;
         (year, decaday, day)
     }
 }
-
 
 impl fmt::Display for SystemTime {
     fn fmt(&self, fmter: &mut fmt::Formatter) -> fmt::Result {
@@ -156,4 +151,3 @@ impl fmt::Display for SystemTime {
         write!(fmter, "{ints:02}:{cents:02}:{ticks:02}")
     }
 }
-

@@ -8,7 +8,7 @@ use std::io::Write;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use crossterm::{ExecutableCommand, terminal, cursor, Result};
+use crossterm::{cursor, terminal, ExecutableCommand, Result};
 
 struct UI {
     stdout: std::io::Stdout,
@@ -35,13 +35,14 @@ impl UI {
     pub fn run(&mut self) -> Result<()> {
         loop {
             // clear the screen
-            self.stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-            self.stdout.execute(cursor::MoveTo(0,0))?;
+            self.stdout
+                .execute(terminal::Clear(terminal::ClearType::All))?;
+            self.stdout.execute(cursor::MoveTo(0, 0))?;
 
             let c10now = c10::SystemTime::now();
 
             // write to the screen
-            write!(self.stdout, "{c10now}\n")?;
+            writeln!(self.stdout, "{c10now}")?;
             self.stdout.flush()?;
 
             // sleep until the next time should be printed
@@ -50,7 +51,8 @@ impl UI {
     }
 
     fn sleep(&mut self) {
-        const GOAL: Duration = Duration::from_micros(24*60*60);
+        // GOAL is one "tick" of duration (10^-6 of a day)
+        const GOAL: Duration = Duration::from_micros(24 * 60 * 60);
 
         // "how long since the last loop iteration"
         let elapsed = self.clk_time.elapsed();
@@ -64,11 +66,11 @@ impl UI {
         self.drifts_idx = (self.drifts_idx + 1) % self.drifts_ns.len();
 
         let avg_drift: i64 = self.drifts_ns.iter().sum::<i64>() / self.drifts_ns.len() as i64;
-        eprintln!("avg_drift {:?}", avg_drift);
+        //eprintln!("avg_drift {:?}", avg_drift);
 
         // sleep for the adjusted amount of time accounting for average drift
         let computed_sleep = (GOAL.as_nanos() as i64) - avg_drift;
-        eprintln!("sleeping for: {:?}", computed_sleep);
+        //eprintln!("sleeping for: {:?}", computed_sleep);
 
         sleep(Duration::from_nanos(computed_sleep.try_into().unwrap()));
     }

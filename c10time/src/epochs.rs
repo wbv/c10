@@ -1,11 +1,10 @@
 //! Module for handling conversions from Unix time and its associated epoch of New Years 1970.
 
-
 #[allow(unused)]
 macro_rules! is_leap {
     ($year:expr) => {
         ($year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0)) as bool
-    }
+    };
 }
 
 /// Days since the Unix epoch for a given year on January 1.
@@ -13,11 +12,11 @@ pub const fn year_to_days(year: usize) -> usize {
     let mut days = 0;
     let mut year = year;
     while year > 1970 {
-        days = days + 365;
+        days += 365;
         if is_leap!(year) {
-            days = days + 1;
+            days += 1;
         }
-        year = year - 1;
+        year -= 1;
     }
     days
 }
@@ -36,7 +35,7 @@ pub const fn year_to_ticks(year: usize) -> u64 {
 pub const fn year_from_seconds(secs: usize) -> usize {
     let mut guess = 1970;
     while year_to_seconds(guess + 1) < secs {
-        guess = guess + 1;
+        guess += 1;
     }
     guess
 }
@@ -45,7 +44,7 @@ pub const fn year_from_seconds(secs: usize) -> usize {
 pub const fn year_from_ticks(ticks: u64) -> usize {
     let mut guess = 1970;
     while year_to_ticks(guess + 1) < ticks {
-        guess = guess + 1;
+        guess += 1;
     }
     guess
 }

@@ -3,7 +3,6 @@
 
 use super::*;
 
-
 #[test]
 fn zero_duration() {
     let zero = Duration::new(0, 0, 0);
